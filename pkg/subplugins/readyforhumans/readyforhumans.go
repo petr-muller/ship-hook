@@ -5,24 +5,35 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/prow/pkg/github"
+
+	"github.com/petr-muller/boxship/pkg/config"
 )
 
-const (
-	pluginName         = "ready-for-humans"
-	labelName          = "ready-for-humans"
-	coderabbitBotLogin = "coderabbitai[bot]"
-)
+const pluginName = "ready-for-humans"
+
+type PluginConfig struct {
+	Label    string `json:"label"`
+	BotLogin string `json:"bot_login"`
+}
+
+func defaultConfig() PluginConfig {
+	return PluginConfig{
+		Label:    "ready-for-humans",
+		BotLogin: "coderabbitai[bot]",
+	}
+}
 
 type githubClient interface {
 	AddLabel(org, repo string, number int, label string) error
 }
 
 type Plugin struct {
-	ghc githubClient
+	ghc      githubClient
+	resolver *config.Resolver
 }
 
-func New(ghc githubClient) *Plugin {
-	return &Plugin{ghc: ghc}
+func New(ghc githubClient, resolver *config.Resolver) *Plugin {
+	return &Plugin{ghc: ghc, resolver: resolver}
 }
 
 func (p *Plugin) Name() string { return pluginName }
@@ -32,7 +43,11 @@ func (p *Plugin) HandlePullRequestEvent(_ *logrus.Entry, _ github.PullRequestEve
 func (p *Plugin) HandleIssueCommentEvent(_ *logrus.Entry, _ github.IssueCommentEvent) {}
 
 func (p *Plugin) HandleReviewEvent(l *logrus.Entry, re github.ReviewEvent) {
-	if re.Review.User.Login != coderabbitBotLogin {
+	org := re.Repo.Owner.Login
+	repo := re.Repo.Name
+	cfg := config.ResolvePluginConfig(p.resolver, pluginName, defaultConfig(), org, repo)
+
+	if re.Review.User.Login != cfg.BotLogin {
 		return
 	}
 
@@ -44,15 +59,13 @@ func (p *Plugin) HandleReviewEvent(l *logrus.Entry, re github.ReviewEvent) {
 		return
 	}
 
-	if prHasLabel(re.PullRequest, labelName) {
+	if prHasLabel(re.PullRequest, cfg.Label) {
 		return
 	}
 
-	org := re.Repo.Owner.Login
-	repo := re.Repo.Name
 	number := re.PullRequest.Number
 
-	if err := p.ghc.AddLabel(org, repo, number, labelName); err != nil {
+	if err := p.ghc.AddLabel(org, repo, number, cfg.Label); err != nil {
 		l.WithError(err).Error("Failed to add ready-for-humans label")
 	}
 }

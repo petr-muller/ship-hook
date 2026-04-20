@@ -17,7 +17,7 @@ func TestReadyForHumans_HandleReviewEvent(t *testing.T) {
 	ghc := fakegithub.NewFakeClient()
 	ghc.RepoLabelsExisting = []string{"ready-for-humans"}
 
-	plugin := readyforhumans.New(ghc)
+	plugin := readyforhumans.New(ghc, nil)
 	event := integration.LoadTestEvent[github.ReviewEvent](t, "review_submitted_approved.json")
 
 	plugin.HandleReviewEvent(logrus.NewEntry(logrus.StandardLogger()), event)

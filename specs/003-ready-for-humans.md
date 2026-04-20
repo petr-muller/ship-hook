@@ -9,16 +9,32 @@ CodeRabbit (`coderabbitai[bot]`) performs automated code reviews on pull request
 
 ## Design
 
+### Configuration
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `label` | `ready-for-humans` | Label to add to the PR |
+| `bot_login` | `coderabbitai[bot]` | GitHub login of the review bot to watch |
+
+Example config:
+```yaml
+plugins:
+  - name: ready-for-humans
+    config:
+      label: ai-reviewed
+      bot_login: "coderabbitai[bot]"
+```
+
 ### Trigger
 
 The plugin handles `ReviewEvent` from GitHub (webhook event type `pull_request_review`). It acts when all of the following are true:
 
-- The review author is `coderabbitai[bot]`
+- The review author matches `bot_login`
 - The action is `submitted`
 - The review state is `APPROVED`
-- The PR does not already have the `ready-for-humans` label
+- The PR does not already have the configured label
 
-When triggered, the plugin adds the `ready-for-humans` label to the PR.
+When triggered, the plugin adds the configured label to the PR.
 
 ### Scope
 

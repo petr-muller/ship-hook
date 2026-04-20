@@ -15,7 +15,8 @@ make image     # build container image (requires build first)
 ## Architecture
 
 - `cmd/boxship/` - Server entrypoint. Uses `sigs.k8s.io/prow/pkg/githubeventserver` for HTTP event handling.
-- `pkg/dispatch/` - Event dispatcher that multiplexes events to registered sub-plugins.
+- `pkg/config/` - Configuration loading, merging, and resolution. Supports layered config (top/org/repo) with supplemental config files.
+- `pkg/dispatch/` - Event dispatcher that multiplexes events to registered sub-plugins. Uses `config.Resolver` for enable/disable gating.
 - `pkg/subplugins/` - Sub-plugin implementations. Each sub-package implements `dispatch.SubPlugin`.
 - `images/boxship/` - Container image definition.
 - `specs/` - Lightweight feature specifications.
@@ -24,9 +25,11 @@ make image     # build container image (requires build first)
 
 1. Create a new package under `pkg/subplugins/<name>/`
 2. Define a narrow `githubClient` interface for the GitHub API methods the plugin needs
-3. Accept the client via constructor: `func New(ghc githubClient) *Plugin`
+3. Accept the client and resolver via constructor: `func New(ghc githubClient, resolver *config.Resolver) *Plugin`
 4. Implement the `dispatch.SubPlugin` interface
-5. Register the plugin in `cmd/boxship/main.go`
+5. Define a `PluginConfig` struct and `defaultConfig()` if the plugin needs configuration
+6. Use `config.ResolvePluginConfig[T](resolver, name, defaultCfg, org, repo)` in handlers to get typed config
+7. Register the plugin in `cmd/boxship/main.go`
 6. Add unit tests in `pkg/subplugins/<name>/<name>_test.go` using `fakegithub.NewFakeClient()`
 
 See `pkg/subplugins/example/` for a reference implementation.

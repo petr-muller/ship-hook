@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/prow/pkg/interrupts"
 	"sigs.k8s.io/prow/pkg/logrusutil"
 
+	"github.com/petr-muller/boxship/pkg/config"
 	"github.com/petr-muller/boxship/pkg/dispatch"
 	"github.com/petr-muller/boxship/pkg/subplugins/example"
 	"github.com/petr-muller/boxship/pkg/subplugins/readyforhumans"
@@ -24,6 +25,8 @@ type options struct {
 	hmacSecretFile     string
 	dryRun             bool
 	logLevel           string
+	configPath         string
+	supplementalDir    string
 }
 
 func gatherOptions() options {
@@ -35,6 +38,8 @@ func gatherOptions() options {
 	fs.StringVar(&o.hmacSecretFile, "hmac-secret-file", "/etc/webhook/hmac", "Path to the file containing the GitHub HMAC secret")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing (uses no mutations)")
 	fs.StringVar(&o.logLevel, "log-level", "debug", "Log level (trace, debug, info, warn, error, fatal, panic)")
+	fs.StringVar(&o.configPath, "config-path", "", "Path to the boxship config file")
+	fs.StringVar(&o.supplementalDir, "supplemental-config-dir", "", "Path to a directory of supplemental config files")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "error parsing flags: %v\n", err)
@@ -67,6 +72,12 @@ func main() {
 		logger.WithError(err).Fatal("Invalid options")
 	}
 
+	cfg, err := config.Load(o.configPath, o.supplementalDir)
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to load config")
+	}
+	resolver := config.NewResolver(cfg)
+
 	hmacTokenGenerator := func() []byte {
 		data, err := os.ReadFile(o.hmacSecretFile)
 		if err != nil {
@@ -83,9 +94,9 @@ func main() {
 
 	eventServer := githubeventserver.New(o.eventServerOptions, hmacTokenGenerator, logger)
 
-	dispatcher := dispatch.NewDispatcher(logger)
+	dispatcher := dispatch.NewDispatcher(logger, resolver)
 	dispatcher.Register(example.New(ghc))
-	dispatcher.Register(readyforhumans.New(ghc))
+	dispatcher.Register(readyforhumans.New(ghc, resolver))
 
 	eventServer.RegisterHandlePullRequestEvent(dispatcher.HandlePullRequestEvent)
 	eventServer.RegisterHandleIssueCommentEvent(dispatcher.HandleIssueCommentEvent)

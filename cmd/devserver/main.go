@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/prow/pkg/githubeventserver"
 	"sigs.k8s.io/prow/pkg/logrusutil"
 
+	"github.com/petr-muller/boxship/pkg/config"
 	"github.com/petr-muller/boxship/pkg/dispatch"
 	"github.com/petr-muller/boxship/pkg/subplugins/example"
 	"github.com/petr-muller/boxship/pkg/subplugins/readyforhumans"
@@ -31,10 +32,12 @@ func main() {
 	logger := logrus.WithField("component", "boxship-devserver")
 
 	var statePort int
+	var configPath string
 	esOpts := githubeventserver.Options{}
 
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.IntVar(&statePort, "state-port", 8889, "State API port")
+	fs.StringVar(&configPath, "config-path", "", "Path to boxship config file (default: all plugins enabled)")
 	esOpts.Bind(fs)
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		logger.WithError(err).Fatal("Failed to parse flags")
@@ -44,14 +47,30 @@ func main() {
 		logger.WithError(err).Fatal("Invalid event server options")
 	}
 
+	var resolver *config.Resolver
+	if configPath != "" {
+		cfg, err := config.Load(configPath, "")
+		if err != nil {
+			logger.WithError(err).Fatal("Failed to load config")
+		}
+		resolver = config.NewResolver(cfg)
+	} else {
+		resolver = config.NewResolver(&config.Config{
+			Plugins: []config.PluginConfig{
+				{Name: "example"},
+				{Name: "ready-for-humans"},
+			},
+		})
+	}
+
 	ghc := fakegithub.NewFakeClient()
 
 	hmacTokenGenerator := func() []byte { return []byte(devHMAC) }
 	eventServer := githubeventserver.New(esOpts, hmacTokenGenerator, logger)
 
-	dispatcher := dispatch.NewDispatcher(logger)
+	dispatcher := dispatch.NewDispatcher(logger, resolver)
 	dispatcher.Register(example.New(ghc))
-	dispatcher.Register(readyforhumans.New(ghc))
+	dispatcher.Register(readyforhumans.New(ghc, resolver))
 
 	eventServer.RegisterHandlePullRequestEvent(dispatcher.HandlePullRequestEvent)
 	eventServer.RegisterHandleIssueCommentEvent(dispatcher.HandleIssueCommentEvent)
