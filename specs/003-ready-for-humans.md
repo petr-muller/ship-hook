@@ -13,7 +13,7 @@ CodeRabbit (`coderabbitai[bot]`) performs automated code reviews on pull request
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `label` | `ready-for-humans` | Label to add to the PR |
+| `label` | `ready-for-human-review` | Label to add to the PR |
 | `bot_login` | `coderabbitai[bot]` | GitHub login of the review bot to watch |
 
 Example config:

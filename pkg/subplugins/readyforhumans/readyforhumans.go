@@ -20,7 +20,7 @@ type PluginConfig struct {
 
 func defaultConfig() PluginConfig {
 	return PluginConfig{
-		Label:    "ready-for-humans",
+		Label:    "ready-for-human-review",
 		BotLogin: "coderabbitai[bot]",
 	}
 }

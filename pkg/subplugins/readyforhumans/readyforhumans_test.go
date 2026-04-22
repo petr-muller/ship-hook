@@ -102,7 +102,7 @@ func TestHandleReviewEvent(t *testing.T) {
 				PullRequest: github.PullRequest{Number: 42},
 				Repo:        github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
 			},
-			expectAdded: []string{"org/repo#42:ready-for-humans"},
+			expectAdded: []string{"org/repo#42:ready-for-human-review"},
 		},
 		{
 			name:     "no-op on approval when label already present",
@@ -115,7 +115,7 @@ func TestHandleReviewEvent(t *testing.T) {
 				},
 				PullRequest: github.PullRequest{
 					Number: 42,
-					Labels: []github.Label{{Name: "ready-for-humans"}},
+					Labels: []github.Label{{Name: "ready-for-human-review"}},
 				},
 				Repo: github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
 			},
@@ -146,7 +146,7 @@ func TestHandleReviewEvent(t *testing.T) {
 				PullRequest: github.PullRequest{Number: 10},
 				Repo:        github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
 			},
-			expectAdded: []string{"org/repo#10:ready-for-humans"},
+			expectAdded: []string{"org/repo#10:ready-for-human-review"},
 		},
 		{
 			name:     "custom bot_login does not match default bot",
