@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -14,10 +15,12 @@ import (
 
 type fakePlugin struct{}
 
-func (f *fakePlugin) Name() string                                                       { return "fake" }
-func (f *fakePlugin) HandlePullRequestEvent(_ *logrus.Entry, _ github.PullRequestEvent)   {}
-func (f *fakePlugin) HandleIssueCommentEvent(_ *logrus.Entry, _ github.IssueCommentEvent) {}
-func (f *fakePlugin) HandleReviewEvent(_ *logrus.Entry, _ github.ReviewEvent)             {}
+func (f *fakePlugin) Name() string                                                                       { return "fake" }
+func (f *fakePlugin) HandlePullRequestEvent(_ context.Context, _ *logrus.Entry, _ github.PullRequestEvent) {
+}
+func (f *fakePlugin) HandleIssueCommentEvent(_ context.Context, _ *logrus.Entry, _ github.IssueCommentEvent) {
+}
+func (f *fakePlugin) HandleReviewEvent(_ context.Context, _ *logrus.Entry, _ github.ReviewEvent) {}
 
 type recordingPlugin struct {
 	name               string
@@ -29,19 +32,19 @@ type recordingPlugin struct {
 
 func (r *recordingPlugin) Name() string { return r.name }
 
-func (r *recordingPlugin) HandlePullRequestEvent(_ *logrus.Entry, event github.PullRequestEvent) {
+func (r *recordingPlugin) HandlePullRequestEvent(_ context.Context, _ *logrus.Entry, event github.PullRequestEvent) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.prEvents = append(r.prEvents, event)
 }
 
-func (r *recordingPlugin) HandleIssueCommentEvent(_ *logrus.Entry, event github.IssueCommentEvent) {
+func (r *recordingPlugin) HandleIssueCommentEvent(_ context.Context, _ *logrus.Entry, event github.IssueCommentEvent) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.issueCommentEvents = append(r.issueCommentEvents, event)
 }
 
-func (r *recordingPlugin) HandleReviewEvent(_ *logrus.Entry, event github.ReviewEvent) {
+func (r *recordingPlugin) HandleReviewEvent(_ context.Context, _ *logrus.Entry, event github.ReviewEvent) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.reviewEvents = append(r.reviewEvents, event)
@@ -162,6 +165,117 @@ func TestDispatcherReviewEventGating(t *testing.T) {
 	if len(disabled.reviewEvents) != 0 {
 		t.Errorf("disabled plugin should not have received review events, got %d", len(disabled.reviewEvents))
 	}
+}
+
+func TestDispatcherShutdownWaitsForHandlers(t *testing.T) {
+	d := NewDispatcher(logrus.NewEntry(logrus.StandardLogger()), enabledResolver("slow"))
+
+	started := make(chan struct{})
+	blocking := &blockingPlugin{name: "slow", started: started, unblock: make(chan struct{})}
+	d.Register(blocking)
+
+	event := testhelpers.NewPullRequestEvent("org", "repo", 1, "opened")
+	d.HandlePullRequestEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+
+	<-started
+
+	shutdownDone := make(chan error, 1)
+	go func() {
+		shutdownDone <- d.Shutdown(context.Background())
+	}()
+
+	select {
+	case <-shutdownDone:
+		t.Fatal("Shutdown returned before handler finished")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	close(blocking.unblock)
+
+	select {
+	case err := <-shutdownDone:
+		if err != nil {
+			t.Errorf("Shutdown returned error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown did not return after handler finished")
+	}
+}
+
+func TestDispatcherShutdownCancelsContext(t *testing.T) {
+	d := NewDispatcher(logrus.NewEntry(logrus.StandardLogger()), enabledResolver("ctx-aware"))
+
+	ctxCancelled := make(chan struct{})
+	p := &contextAwarePlugin{
+		name:         "ctx-aware",
+		ctxCancelled: ctxCancelled,
+	}
+	d.Register(p)
+
+	event := testhelpers.NewPullRequestEvent("org", "repo", 1, "opened")
+	d.HandlePullRequestEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+
+	d.cancel()
+
+	select {
+	case <-ctxCancelled:
+	case <-time.After(2 * time.Second):
+		t.Fatal("handler did not observe context cancellation")
+	}
+}
+
+func TestDispatcherShutdownRespectsDeadline(t *testing.T) {
+	d := NewDispatcher(logrus.NewEntry(logrus.StandardLogger()), enabledResolver("stuck"))
+
+	started := make(chan struct{})
+	blocking := &blockingPlugin{name: "stuck", started: started, unblock: make(chan struct{})}
+	d.Register(blocking)
+
+	event := testhelpers.NewPullRequestEvent("org", "repo", 1, "opened")
+	d.HandlePullRequestEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+
+	<-started
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	err := d.Shutdown(ctx)
+	if err != context.DeadlineExceeded {
+		t.Errorf("expected DeadlineExceeded, got %v", err)
+	}
+
+	close(blocking.unblock)
+}
+
+type blockingPlugin struct {
+	name    string
+	started chan struct{}
+	unblock chan struct{}
+}
+
+func (b *blockingPlugin) Name() string { return b.name }
+func (b *blockingPlugin) HandlePullRequestEvent(_ context.Context, _ *logrus.Entry, _ github.PullRequestEvent) {
+	close(b.started)
+	<-b.unblock
+}
+func (b *blockingPlugin) HandleIssueCommentEvent(_ context.Context, _ *logrus.Entry, _ github.IssueCommentEvent) {
+}
+func (b *blockingPlugin) HandleReviewEvent(_ context.Context, _ *logrus.Entry, _ github.ReviewEvent) {
+}
+
+type contextAwarePlugin struct {
+	name         string
+	ctxCancelled chan struct{}
+}
+
+func (c *contextAwarePlugin) Name() string { return c.name }
+func (c *contextAwarePlugin) HandlePullRequestEvent(ctx context.Context, _ *logrus.Entry, _ github.PullRequestEvent) {
+	<-ctx.Done()
+	close(c.ctxCancelled)
+}
+func (c *contextAwarePlugin) HandleIssueCommentEvent(_ context.Context, _ *logrus.Entry, _ github.IssueCommentEvent) {
+}
+func (c *contextAwarePlugin) HandleReviewEvent(_ context.Context, _ *logrus.Entry, _ github.ReviewEvent) {
 }
 
 func waitForEvents(t *testing.T, countFn func() int, expected int) {

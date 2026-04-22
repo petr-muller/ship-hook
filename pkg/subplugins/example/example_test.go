@@ -1,6 +1,7 @@
 package example
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -14,7 +15,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	plugin := New(ghc)
 
 	event := testhelpers.NewPullRequestEvent("org", "repo", 42, "opened")
-	plugin.HandlePullRequestEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+	plugin.HandlePullRequestEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), event)
 
 	if len(ghc.IssueCommentsAdded) != 1 {
 		t.Fatalf("expected 1 comment, got %d", len(ghc.IssueCommentsAdded))
@@ -30,7 +31,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	plugin := New(ghc)
 
 	event := testhelpers.NewIssueCommentEvent("org", "repo", 1, "/example")
-	plugin.HandleIssueCommentEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+	plugin.HandleIssueCommentEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), event)
 
 	if len(ghc.IssueCommentsAdded) != 0 {
 		t.Errorf("expected no comments, got %d", len(ghc.IssueCommentsAdded))
@@ -42,5 +43,5 @@ func TestHandleReviewEvent(t *testing.T) {
 	plugin := New(ghc)
 
 	event := testhelpers.NewReviewEvent("org", "repo", 1, "submitted", "reviewer", "APPROVED")
-	plugin.HandleReviewEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+	plugin.HandleReviewEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), event)
 }

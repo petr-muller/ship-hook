@@ -1,6 +1,7 @@
 package readyforhumans
 
 import (
+	"context"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -38,11 +39,13 @@ func New(ghc githubClient, resolver *config.Resolver) *Plugin {
 
 func (p *Plugin) Name() string { return pluginName }
 
-func (p *Plugin) HandlePullRequestEvent(_ *logrus.Entry, _ github.PullRequestEvent) {}
+func (p *Plugin) HandlePullRequestEvent(_ context.Context, _ *logrus.Entry, _ github.PullRequestEvent) {
+}
 
-func (p *Plugin) HandleIssueCommentEvent(_ *logrus.Entry, _ github.IssueCommentEvent) {}
+func (p *Plugin) HandleIssueCommentEvent(_ context.Context, _ *logrus.Entry, _ github.IssueCommentEvent) {
+}
 
-func (p *Plugin) HandleReviewEvent(l *logrus.Entry, re github.ReviewEvent) {
+func (p *Plugin) HandleReviewEvent(_ context.Context, l *logrus.Entry, re github.ReviewEvent) {
 	org := re.Repo.Owner.Login
 	repo := re.Repo.Name
 	cfg := config.ResolvePluginConfig(p.resolver, pluginName, defaultConfig(), org, repo)

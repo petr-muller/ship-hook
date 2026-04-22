@@ -3,6 +3,7 @@
 package readyforhumans
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -20,7 +21,7 @@ func TestReadyForHumans_HandleReviewEvent(t *testing.T) {
 	plugin := readyforhumans.New(ghc, nil)
 	event := integration.LoadTestEvent[github.ReviewEvent](t, "review_submitted_approved.json")
 
-	plugin.HandleReviewEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+	plugin.HandleReviewEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), event)
 
 	if len(ghc.IssueLabelsAdded) != 1 {
 		t.Fatalf("expected 1 label added, got %d", len(ghc.IssueLabelsAdded))

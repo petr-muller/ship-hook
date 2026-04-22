@@ -3,6 +3,7 @@
 package example
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func (p *Plugin) Name() string {
 	return "example"
 }
 
-func (p *Plugin) HandlePullRequestEvent(l *logrus.Entry, event github.PullRequestEvent) {
+func (p *Plugin) HandlePullRequestEvent(_ context.Context, l *logrus.Entry, event github.PullRequestEvent) {
 	l.Info("Received pull request event")
 	org := event.Repo.Owner.Login
 	repo := event.Repo.Name
@@ -35,10 +36,10 @@ func (p *Plugin) HandlePullRequestEvent(l *logrus.Entry, event github.PullReques
 	}
 }
 
-func (p *Plugin) HandleIssueCommentEvent(l *logrus.Entry, event github.IssueCommentEvent) {
+func (p *Plugin) HandleIssueCommentEvent(_ context.Context, l *logrus.Entry, event github.IssueCommentEvent) {
 	l.Info("Received issue comment event")
 }
 
-func (p *Plugin) HandleReviewEvent(l *logrus.Entry, event github.ReviewEvent) {
+func (p *Plugin) HandleReviewEvent(_ context.Context, l *logrus.Entry, event github.ReviewEvent) {
 	l.Info("Received review event")
 }

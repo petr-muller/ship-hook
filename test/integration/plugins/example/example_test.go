@@ -3,6 +3,7 @@
 package example
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -21,7 +22,7 @@ func TestExamplePlugin_HandlePullRequestEvent(t *testing.T) {
 	plugin := example.New(ghc)
 	event := integration.LoadTestEvent[github.PullRequestEvent](t, "pull_request_opened.json")
 
-	plugin.HandlePullRequestEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+	plugin.HandlePullRequestEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), event)
 
 	if len(ghc.IssueCommentsAdded) != 1 {
 		t.Fatalf("expected 1 comment, got %d", len(ghc.IssueCommentsAdded))
@@ -38,7 +39,7 @@ func TestExamplePlugin_HandleIssueCommentEvent(t *testing.T) {
 
 	event := integration.LoadTestEvent[github.IssueCommentEvent](t, "issue_comment_created.json")
 
-	plugin.HandleIssueCommentEvent(logrus.NewEntry(logrus.StandardLogger()), event)
+	plugin.HandleIssueCommentEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), event)
 
 	if len(ghc.IssueCommentsAdded) != 0 {
 		t.Errorf("expected no comments from issue comment handler, got %d", len(ghc.IssueCommentsAdded))

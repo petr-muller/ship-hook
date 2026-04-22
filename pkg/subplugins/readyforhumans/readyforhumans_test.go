@@ -1,6 +1,7 @@
 package readyforhumans
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -166,7 +167,7 @@ func TestHandleReviewEvent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fc := &fakeClient{}
 			p := New(fc, tc.resolver)
-			p.HandleReviewEvent(logrus.NewEntry(logrus.StandardLogger()), tc.event)
+			p.HandleReviewEvent(context.Background(), logrus.NewEntry(logrus.StandardLogger()), tc.event)
 
 			if len(tc.expectAdded) == 0 && len(fc.labelsAdded) == 0 {
 				return

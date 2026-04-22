@@ -104,8 +104,13 @@ func main() {
 
 	interrupts.OnInterrupt(func() {
 		eventServer.GracefulShutdown()
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
+
+		if err := dispatcher.Shutdown(ctx); err != nil {
+			logger.WithError(err).Error("Error waiting for in-flight handlers")
+		}
 		if err := eventServer.Shutdown(ctx); err != nil {
 			logger.WithError(err).Error("Error shutting down event server")
 		}

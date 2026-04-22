@@ -27,11 +27,13 @@ GitHub → Prow Hook → boxship HTTP server → Dispatcher → SubPlugin handle
 ```go
 type SubPlugin interface {
     Name() string
-    HandlePullRequestEvent(*logrus.Entry, github.PullRequestEvent)
-    HandleIssueCommentEvent(*logrus.Entry, github.IssueCommentEvent)
-    HandleReviewEvent(*logrus.Entry, github.ReviewEvent)
+    HandlePullRequestEvent(context.Context, *logrus.Entry, github.PullRequestEvent)
+    HandleIssueCommentEvent(context.Context, *logrus.Entry, github.IssueCommentEvent)
+    HandleReviewEvent(context.Context, *logrus.Entry, github.ReviewEvent)
 }
 ```
+
+The `context.Context` parameter carries the Dispatcher's lifecycle context, enabling graceful shutdown signaling. See [005-graceful-shutdown.md](005-graceful-shutdown.md).
 
 New handler methods can be added to the interface as needed. The upstream event server supports: `PullRequest`, `IssueComment`, `Issue`, `Push`, `Status`, `ReviewComment`, `Review`, `WorkflowRun`, `RegistryPackage`.
 
