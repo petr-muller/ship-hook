@@ -1,4 +1,4 @@
-# Boxship Specifications
+# SHIP Hook Specifications
 
 This directory holds lightweight design specs for significant features. Specs are Markdown files intended to be useful to both humans and coding agents.
 

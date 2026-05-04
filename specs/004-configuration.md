@@ -5,7 +5,7 @@ Implemented
 
 ## Motivation
 
-Boxship needs a configuration system so that sub-plugins can be enabled or disabled per org/repo, and sub-plugins can receive custom configuration that varies across organizations and repositories. The system must support supplemental config files so that org/repo owners can shard their configuration into separate YAML files.
+SHIP Hook needs a configuration system so that sub-plugins can be enabled or disabled per org/repo, and sub-plugins can receive custom configuration that varies across organizations and repositories. The system must support supplemental config files so that org/repo owners can shard their configuration into separate YAML files.
 
 ## Design
 

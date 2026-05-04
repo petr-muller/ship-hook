@@ -5,7 +5,7 @@ Draft
 
 ## Motivation
 
-Boxship needs a layered testing strategy that supports fast iteration for both humans and agents. Sub-plugins need to actuate against GitHub (via injected clients), and each layer of testing requires different trade-offs between speed, realism, and isolation.
+SHIP Hook needs a layered testing strategy that supports fast iteration for both humans and agents. Sub-plugins need to actuate against GitHub (via injected clients), and each layer of testing requires different trade-offs between speed, realism, and isolation.
 
 ## Design
 
@@ -19,7 +19,7 @@ Tests with `//go:build integration` tag in `test/integration/`. Run via `make in
 
 ### Layer 3: Interactive Dev Server
 
-A local dev server (`cmd/devserver/`) runs boxship with an embedded `fakegithub.FakeClient`. Webhooks are sent via `cmd/devwebhook/` (wraps Prow's phony). State inspection via `/state` and `/reset` HTTP endpoints. Controlled via `make dev-server`, `make dev-webhook`, `make dev-state`, `make dev-reset`.
+A local dev server (`cmd/devserver/`) runs ship-hook with an embedded `fakegithub.FakeClient`. Webhooks are sent via `cmd/devwebhook/` (wraps Prow's phony). State inspection via `/state` and `/reset` HTTP endpoints. Controlled via `make dev-server`, `make dev-webhook`, `make dev-state`, `make dev-reset`.
 
 A Claude Code skill (`.claude/skills/dev-test.md`) exposes the dev server workflow to both humans and agents.
 

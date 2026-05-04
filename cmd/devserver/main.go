@@ -12,10 +12,10 @@ import (
 	"sigs.k8s.io/prow/pkg/githubeventserver"
 	"sigs.k8s.io/prow/pkg/logrusutil"
 
-	"github.com/petr-muller/boxship/pkg/config"
-	"github.com/petr-muller/boxship/pkg/dispatch"
-	"github.com/petr-muller/boxship/pkg/subplugins/example"
-	"github.com/petr-muller/boxship/pkg/subplugins/readyforhumans"
+	"github.com/openshift-eng/ship-hook/pkg/config"
+	"github.com/openshift-eng/ship-hook/pkg/dispatch"
+	"github.com/openshift-eng/ship-hook/pkg/subplugins/example"
+	"github.com/openshift-eng/ship-hook/pkg/subplugins/readyforhumans"
 )
 
 const devHMAC = "devhmac"
@@ -29,7 +29,7 @@ type stateResponse struct {
 
 func main() {
 	logrusutil.ComponentInit()
-	logger := logrus.WithField("component", "boxship-devserver")
+	logger := logrus.WithField("component", "ship-hook-devserver")
 
 	var statePort int
 	var configPath string
@@ -37,7 +37,7 @@ func main() {
 
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.IntVar(&statePort, "state-port", 8889, "State API port")
-	fs.StringVar(&configPath, "config-path", "", "Path to boxship config file (default: all plugins enabled)")
+	fs.StringVar(&configPath, "config-path", "", "Path to ship-hook config file (default: all plugins enabled)")
 	esOpts.Bind(fs)
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		logger.WithError(err).Fatal("Failed to parse flags")

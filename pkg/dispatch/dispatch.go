@@ -10,11 +10,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/prow/pkg/github"
 
-	"github.com/petr-muller/boxship/pkg/config"
+	"github.com/openshift-eng/ship-hook/pkg/config"
 )
 
 var pluginHandleDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	Name:    "boxship_plugin_handle_duration_seconds",
+	Name:    "shiphook_plugin_handle_duration_seconds",
 	Help:    "How long a sub-plugin took to handle an event.",
 	Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
 }, []string{"event_type", "plugin", "took_action"})
@@ -38,7 +38,7 @@ func Handled(reason string) HandlerResult {
 	return HandlerResult{Relevant: true, Reason: reason}
 }
 
-// SubPlugin defines the interface that all boxship sub-plugins must implement.
+// SubPlugin defines the interface that all SHIP Hook sub-plugins must implement.
 type SubPlugin interface {
 	Name() string
 	HandlePullRequestEvent(context.Context, *logrus.Entry, github.PullRequestEvent) HandlerResult

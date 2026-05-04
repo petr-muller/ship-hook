@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/prow/pkg/github"
 
-	"github.com/petr-muller/boxship/pkg/config"
+	"github.com/openshift-eng/ship-hook/pkg/config"
 )
 
 type fakeClient struct {

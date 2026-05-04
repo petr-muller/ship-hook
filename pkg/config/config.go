@@ -11,12 +11,12 @@ import (
 )
 
 type Config struct {
-	Boxship BoxshipConfig        `json:"boxship,omitempty"`
+	ShipHook ShipHookConfig       `json:"ship_hook,omitempty"`
 	Plugins []PluginConfig       `json:"plugins,omitempty"`
 	Orgs    map[string]OrgConfig `json:"orgs,omitempty"`
 }
 
-type BoxshipConfig struct{}
+type ShipHookConfig struct{}
 
 type PluginConfig struct {
 	Name     string          `json:"name"`

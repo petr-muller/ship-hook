@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/prow/pkg/github/fakegithub"
 
-	"github.com/petr-muller/boxship/pkg/testhelpers"
+	"github.com/openshift-eng/ship-hook/pkg/testhelpers"
 )
 
 func TestHandlePullRequestEvent(t *testing.T) {

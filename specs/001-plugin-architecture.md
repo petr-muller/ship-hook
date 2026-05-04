@@ -5,17 +5,17 @@ Implemented (skeleton)
 
 ## Motivation
 
-Boxship needs to host multiple independent behaviors ("sub-plugins") in a single deployable binary. Different sub-plugins may be owned by different people and should be developed independently without tight coupling. The architecture must integrate with Prow's external plugin protocol, where Prow Hook forwards GitHub webhook events over HTTP.
+SHIP Hook needs to host multiple independent behaviors ("sub-plugins") in a single deployable binary. Different sub-plugins may be owned by different people and should be developed independently without tight coupling. The architecture must integrate with Prow's external plugin protocol, where Prow Hook forwards GitHub webhook events over HTTP.
 
 ## Design
 
 ### Event Flow
 
 ```
-GitHub → Prow Hook → boxship HTTP server → Dispatcher → SubPlugin handlers
+GitHub → Prow Hook → ship-hook HTTP server → Dispatcher → SubPlugin handlers
 ```
 
-1. Prow Hook receives a GitHub webhook and forwards it to boxship's HTTP endpoint
+1. Prow Hook receives a GitHub webhook and forwards it to ship-hook's HTTP endpoint
 2. The `githubeventserver.GitHubEventServer` (from `sigs.k8s.io/prow/pkg/githubeventserver`) validates the HMAC signature and deserializes the event
 3. The event server invokes registered handler functions, which are the Dispatcher's methods
 4. The Dispatcher iterates registered sub-plugins and calls each one's handler in a separate goroutine
@@ -44,13 +44,13 @@ New handler methods can be added to the interface as needed. The upstream event 
 Each sub-plugin lives in its own package under `pkg/subplugins/<name>/`. A sub-plugin package must:
 
 - Export a constructor (e.g. `New(...)`) returning a type that implements `dispatch.SubPlugin`
-- Be registered in `cmd/boxship/main.go` via `dispatcher.Register(...)`
+- Be registered in `cmd/ship-hook/main.go` via `dispatcher.Register(...)`
 
 See `pkg/subplugins/example/` for the reference implementation.
 
 ### Server Entrypoint
 
-`cmd/boxship/main.go` wires everything together:
+`cmd/ship-hook/main.go` wires everything together:
 
 1. Parses flags (`githubeventserver.Options`, `flagutil.GitHubOptions`, HMAC secret path, dry-run, log level)
 2. Creates the `githubeventserver.GitHubEventServer`
@@ -60,7 +60,7 @@ See `pkg/subplugins/example/` for the reference implementation.
 
 ### Container Image
 
-Built following the openshift/ci-tools pattern: the Go binary is compiled externally, and `images/boxship/Dockerfile` simply ADDs it into a UBI9 minimal base image.
+Built following the openshift/ci-tools pattern: the Go binary is compiled externally, and `images/ship-hook/Dockerfile` simply ADDs it into a UBI9 minimal base image.
 
 ## Verification
 

@@ -1,11 +1,11 @@
-# Boxship
+# SHIP Hook
 
 External Prow plugin that receives GitHub webhook events from Prow Hook and dispatches them to internal sub-plugins.
 
 ## Build
 
 ```
-make build     # compile binary to _output/boxship
+make build     # compile binary to _output/ship-hook
 make test      # run all unit tests
 make vet       # run go vet
 make verify    # vet + test
@@ -14,11 +14,11 @@ make image     # build container image (requires build first)
 
 ## Architecture
 
-- `cmd/boxship/` - Server entrypoint. Uses `sigs.k8s.io/prow/pkg/githubeventserver` for HTTP event handling.
+- `cmd/ship-hook/` - Server entrypoint. Uses `sigs.k8s.io/prow/pkg/githubeventserver` for HTTP event handling.
 - `pkg/config/` - Configuration loading, merging, and resolution. Supports layered config (top/org/repo) with supplemental config files.
 - `pkg/dispatch/` - Event dispatcher that multiplexes events to registered sub-plugins. Uses `config.Resolver` for enable/disable gating.
 - `pkg/subplugins/` - Sub-plugin implementations. Each sub-package implements `dispatch.SubPlugin`.
-- `images/boxship/` - Container image definition.
+- `images/ship-hook/` - Container image definition.
 - `specs/` - Lightweight feature specifications.
 
 ## Adding a Sub-Plugin
@@ -29,7 +29,7 @@ make image     # build container image (requires build first)
 4. Implement the `dispatch.SubPlugin` interface
 5. Define a `PluginConfig` struct and `defaultConfig()` if the plugin needs configuration
 6. Use `config.ResolvePluginConfig[T](resolver, name, defaultCfg, org, repo)` in handlers to get typed config
-7. Register the plugin in `cmd/boxship/main.go`
+7. Register the plugin in `cmd/ship-hook/main.go`
 8. Add unit tests in `pkg/subplugins/<name>/<name>_test.go` using `fakegithub.NewFakeClient()`
 
 See `pkg/subplugins/example/` for a reference implementation.
@@ -66,7 +66,7 @@ Located in `test/integration/plugins/<name>/`. Use realistic JSON webhook payloa
 ### Interactive Dev Server
 
 ```
-make dev-server    # start boxship with fakegithub (port 8888 webhook, 8889 state)
+make dev-server    # start ship-hook with fakegithub (port 8888 webhook, 8889 state)
 make dev-webhook EVENT=pull_request PAYLOAD=test/integration/testdata/pull_request_opened.json
 make dev-state     # inspect fakegithub mutations
 make dev-reset     # clear state between tests

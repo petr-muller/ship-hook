@@ -1,11 +1,11 @@
 ---
 name: dev-test
-description: Interactive development testing for boxship plugins. Start a dev server, send test webhooks, inspect plugin state.
+description: Interactive development testing for ship-hook plugins. Start a dev server, send test webhooks, inspect plugin state.
 ---
 
 # Dev Test Skill
 
-Orchestrates the boxship dev server for interactive plugin testing. The dev server runs boxship with a fakegithub client so plugins can actuate without touching real GitHub.
+Orchestrates the ship-hook dev server for interactive plugin testing. The dev server runs ship-hook with a fakegithub client so plugins can actuate without touching real GitHub.
 
 ## Sub-commands
 

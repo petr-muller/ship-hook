@@ -5,7 +5,7 @@ Implemented
 
 ## Motivation
 
-When boxship receives a termination signal (SIGTERM/SIGINT), it must stop accepting new webhook events but allow in-flight sub-plugin handlers to finish their work. Without this, handlers that are mid-way through GitHub API calls (e.g., adding labels, posting comments) may be interrupted, leaving the system in an inconsistent state.
+When ship-hook receives a termination signal (SIGTERM/SIGINT), it must stop accepting new webhook events but allow in-flight sub-plugin handlers to finish their work. Without this, handlers that are mid-way through GitHub API calls (e.g., adding labels, posting comments) may be interrupted, leaving the system in an inconsistent state.
 
 The existing shutdown code calls `eventServer.GracefulShutdown()` and `eventServer.Shutdown(ctx)`, which stops accepting new HTTP requests but does not wait for dispatched sub-plugin goroutines to complete. The Dispatcher fires goroutines with `go` but has no mechanism to track or signal them.
 

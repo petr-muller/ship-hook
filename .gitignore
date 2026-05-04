@@ -26,7 +26,7 @@ go.work.sum
 
 # Build output
 _output/
-/boxship
+/ship-hook
 /devserver
 /devwebhook
 

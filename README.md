@@ -1,6 +1,6 @@
-# Boxship
+# SHIP Hook
 
-Boxship is an external [Prow](https://docs.prow.k8s.io/) plugin that receives GitHub webhook events from Prow Hook and dispatches them to internal sub-plugins. It runs as a single binary hosting multiple independent behaviors, each implemented as a sub-plugin.
+SHIP Hook is an external [Prow](https://docs.prow.k8s.io/) plugin that receives GitHub webhook events from Prow Hook and dispatches them to internal sub-plugins. It runs as a single binary hosting multiple independent behaviors, each implemented as a sub-plugin.
 
 ## Sub-Plugins
 
@@ -11,7 +11,7 @@ Boxship is an external [Prow](https://docs.prow.k8s.io/) plugin that receives Gi
 
 ## Configuration
 
-Boxship uses a YAML config file with layered overrides at the top-level, organization, and repository levels. Lower levels override upper levels.
+SHIP Hook uses a YAML config file with layered overrides at the top-level, organization, and repository levels. Lower levels override upper levels.
 
 ```yaml
 plugins:
@@ -40,7 +40,7 @@ See `specs/004-configuration.md` for full details.
 ## Building
 
 ```
-make build     # compile binary to _output/boxship
+make build     # compile binary to _output/ship-hook
 make test      # run unit tests
 make verify    # vet + test
 make image     # build container image
@@ -49,7 +49,7 @@ make image     # build container image
 ## Running
 
 ```
-_output/boxship \
+_output/ship-hook \
   --config-path=config.yaml \
   --supplemental-config-dir=config.d/ \
   --hmac-secret-file=/path/to/hmac \
@@ -59,7 +59,7 @@ _output/boxship \
 
 ## Development
 
-An interactive dev server runs boxship with an in-memory fake GitHub client:
+An interactive dev server runs ship-hook with an in-memory fake GitHub client:
 
 ```
 make dev-server                    # start on port 8888

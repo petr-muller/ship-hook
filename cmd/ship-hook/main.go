@@ -16,10 +16,10 @@ import (
 	"sigs.k8s.io/prow/pkg/metrics"
 	"sigs.k8s.io/prow/pkg/pjutil"
 
-	"github.com/petr-muller/boxship/pkg/config"
-	"github.com/petr-muller/boxship/pkg/dispatch"
-	"github.com/petr-muller/boxship/pkg/subplugins/example"
-	"github.com/petr-muller/boxship/pkg/subplugins/readyforhumans"
+	"github.com/openshift-eng/ship-hook/pkg/config"
+	"github.com/openshift-eng/ship-hook/pkg/dispatch"
+	"github.com/openshift-eng/ship-hook/pkg/subplugins/example"
+	"github.com/openshift-eng/ship-hook/pkg/subplugins/readyforhumans"
 )
 
 type options struct {
@@ -43,7 +43,7 @@ func gatherOptions() options {
 	fs.StringVar(&o.hmacSecretFile, "hmac-secret-file", "/etc/webhook/hmac", "Path to the file containing the GitHub HMAC secret")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing (uses no mutations)")
 	fs.StringVar(&o.logLevel, "log-level", "debug", "Log level (trace, debug, info, warn, error, fatal, panic)")
-	fs.StringVar(&o.configPath, "config-path", "", "Path to the boxship config file")
+	fs.StringVar(&o.configPath, "config-path", "", "Path to the ship-hook config file")
 	fs.StringVar(&o.supplementalDir, "supplemental-config-dir", "", "Path to a directory of supplemental config files")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
@@ -70,7 +70,7 @@ func (o *options) validate() error {
 
 func main() {
 	logrusutil.ComponentInit()
-	logger := logrus.WithField("component", "boxship")
+	logger := logrus.WithField("component", "ship-hook")
 
 	o := gatherOptions()
 	if err := o.validate(); err != nil {
@@ -97,7 +97,7 @@ func main() {
 		logger.WithError(err).Fatal("Failed to create GitHub client")
 	}
 
-	metrics.ExposeMetrics("boxship", prowconfig.PushGateway{}, o.instrumentationOptions.MetricsPort)
+	metrics.ExposeMetrics("ship-hook", prowconfig.PushGateway{}, o.instrumentationOptions.MetricsPort)
 	health := pjutil.NewHealthOnPort(o.instrumentationOptions.HealthPort)
 	health.ServeReady()
 

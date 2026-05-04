@@ -5,7 +5,7 @@ Proposed
 
 ## Motivation
 
-Boxship currently has no metrics exposure, no health endpoints, and limited logging conventions. During live testing on ota-stage, the lack of structured observability made it impossible to diagnose why the ready-for-humans plugin was silently not acting on events. While the HandlerResult contract (spec 006) addressed the immediate logging gap, boxship needs a coherent observability foundation that operators can rely on and sub-plugin authors can follow without bolting things on ad-hoc.
+SHIP Hook currently has no metrics exposure, no health endpoints, and limited logging conventions. During live testing on ota-stage, the lack of structured observability made it impossible to diagnose why the ready-for-humans plugin was silently not acting on events. While the HandlerResult contract (spec 006) addressed the immediate logging gap, ship-hook needs a coherent observability foundation that operators can rely on and sub-plugin authors can follow without bolting things on ad-hoc.
 
 ## Principles
 
@@ -21,7 +21,7 @@ Boxship currently has no metrics exposure, no health endpoints, and limited logg
 
 ### Metrics
 
-5. **Expose what Prow already collects.** Prow's GitHub client automatically tracks API call counts, rate limits, request durations, and cache behavior. The event server tracks webhook counts and response codes. Boxship must expose these by wiring up `metrics.ExposeMetrics()`. This is zero-cost, high-value.
+5. **Expose what Prow already collects.** Prow's GitHub client automatically tracks API call counts, rate limits, request durations, and cache behavior. The event server tracks webhook counts and response codes. SHIP Hook must expose these by wiring up `metrics.ExposeMetrics()`. This is zero-cost, high-value.
 
 6. **One dispatcher-level histogram.** The dispatcher records handler duration per plugin per event type, using the `took_action` label from HandlerResult. This lets operators spot slow or misbehaving plugins without each plugin managing its own metrics.
 
@@ -29,11 +29,11 @@ Boxship currently has no metrics exposure, no health endpoints, and limited logg
 
 ### Health
 
-8. **Standard Prow health endpoints.** Boxship exposes `/healthz` (liveness) and `/healthz/ready` (readiness) via `pjutil.NewHealthOnPort()`, following the same pattern as hook and other Prow components. Operators can configure the port via `--health-port`.
+8. **Standard Prow health endpoints.** SHIP Hook exposes `/healthz` (liveness) and `/healthz/ready` (readiness) via `pjutil.NewHealthOnPort()`, following the same pattern as hook and other Prow components. Operators can configure the port via `--health-port`.
 
 ### Tracing
 
-9. **No distributed tracing for now.** Prow does not use OpenTelemetry. Boxship's request flow (webhook → dispatcher → sub-plugin → GitHub API) is linear and short-lived. The GitHub event GUID propagated through logrus entries provides sufficient correlation. Revisit when boxship gains cross-service communication or long-running workflows.
+9. **No distributed tracing for now.** Prow does not use OpenTelemetry. SHIP Hook's request flow (webhook → dispatcher → sub-plugin → GitHub API) is linear and short-lived. The GitHub event GUID propagated through logrus entries provides sufficient correlation. Revisit when ship-hook gains cross-service communication or long-running workflows.
 
 ### Guidelines for Sub-Plugin Authors
 
@@ -51,17 +51,17 @@ Boxship currently has no metrics exposure, no health endpoints, and limited logg
 
 ## Implementation
 
-### Wire up Prow infrastructure in `cmd/boxship/main.go`
+### Wire up Prow infrastructure in `cmd/ship-hook/main.go`
 
 1. Add `flagutil.InstrumentationOptions` to the options struct and bind its flags.
-2. Call `metrics.ExposeMetrics("boxship", config.PushGateway{}, o.instrumentationOptions.MetricsPort)` at startup.
+2. Call `metrics.ExposeMetrics("ship-hook", config.PushGateway{}, o.instrumentationOptions.MetricsPort)` at startup.
 3. Call `pjutil.NewHealthOnPort(o.instrumentationOptions.HealthPort)` with `health.ServeReady()`.
 
 ### Add handler duration histogram in `pkg/dispatch/dispatch.go`
 
 Register a Prometheus histogram:
 ```
-boxship_plugin_handle_duration_seconds{event_type, plugin, took_action}
+shiphook_plugin_handle_duration_seconds{event_type, plugin, took_action}
 ```
 
 Record duration in each dispatcher handler method, using `HandlerResult.Relevant` to set `took_action`.
@@ -73,7 +73,7 @@ Add metrics and health ports to the container spec. Add liveness and readiness p
 ## Verification
 
 - `make verify` passes
-- `curl :9090/metrics` shows Prow GitHub client metrics, webhook metrics, and boxship dispatcher metrics
+- `curl :9090/metrics` shows Prow GitHub client metrics, webhook metrics, and ship-hook dispatcher metrics
 - `curl :8081/healthz` returns OK
 - `curl :8081/healthz/ready` returns OK
-- Dev server test: send events and verify `boxship_plugin_handle_duration_seconds` histogram has entries
+- Dev server test: send events and verify `shiphook_plugin_handle_duration_seconds` histogram has entries

@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/prow/pkg/github"
 	"sigs.k8s.io/prow/pkg/github/fakegithub"
 
-	"github.com/petr-muller/boxship/pkg/subplugins/readyforhumans"
-	integration "github.com/petr-muller/boxship/test/integration"
+	"github.com/openshift-eng/ship-hook/pkg/subplugins/readyforhumans"
+	integration "github.com/openshift-eng/ship-hook/test/integration"
 )
 
 func TestReadyForHumans_HandleReviewEvent(t *testing.T) {

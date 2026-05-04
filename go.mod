@@ -1,4 +1,4 @@
-module github.com/petr-muller/boxship
+module github.com/openshift-eng/ship-hook
 
 go 1.25.8
 
