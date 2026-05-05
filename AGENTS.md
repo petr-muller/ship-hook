@@ -6,7 +6,7 @@ External Prow plugin that receives GitHub webhook events from Prow Hook and disp
 
 ```
 make build     # compile binary to _output/ship-hook
-make test      # run all unit tests
+make test      # run all unit tests (via gotestsum)
 make vet       # run go vet
 make verify    # vet + test
 make image     # build container image (requires build first)
