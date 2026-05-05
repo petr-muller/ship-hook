@@ -80,7 +80,7 @@ func ResolvePluginConfig[T any](r *Resolver, pluginName string, defaultCfg T, or
 		return cfg
 	}
 	for _, layer := range r.rawConfigLayers(pluginName, org, repo) {
-		json.Unmarshal(layer, &cfg)
+		_ = json.Unmarshal(layer, &cfg)
 	}
 	return cfg
 }

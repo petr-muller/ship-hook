@@ -2,7 +2,7 @@ BINARY := ship-hook
 OUTPUT_DIR := _output
 IMAGE_REPO ?= quay.io/petr-muller/ship-hook
 
-.PHONY: build test integration-test vet verify image clean dev-server dev-webhook dev-state dev-reset dev-watch
+.PHONY: build test integration-test vet lint verify image clean dev-server dev-webhook dev-state dev-reset dev-watch
 
 build:
 	go build -o $(OUTPUT_DIR)/$(BINARY) ./cmd/ship-hook/
@@ -16,7 +16,10 @@ integration-test:
 vet:
 	go vet ./...
 
-verify: vet test
+lint:
+	golangci-lint run ./...
+
+verify: vet lint test
 
 image: build
 	docker build -t $(IMAGE_REPO):latest -f images/ship-hook/Dockerfile $(OUTPUT_DIR)/

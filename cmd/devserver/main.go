@@ -85,7 +85,9 @@ func main() {
 			AssigneesAdded:     ghc.AssigneesAdded,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(state)
+		if err := json.NewEncoder(w).Encode(state); err != nil {
+			logger.WithError(err).Error("Failed to encode state response")
+		}
 	})
 	stateMux.HandleFunc("POST /reset", func(w http.ResponseWriter, r *http.Request) {
 		ghc.IssueCommentsAdded = nil
@@ -93,7 +95,7 @@ func main() {
 		ghc.IssueLabelsRemoved = nil
 		ghc.AssigneesAdded = nil
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "state reset")
+		fmt.Fprintln(w, "state reset") //nolint:errcheck
 	})
 
 	go func() {

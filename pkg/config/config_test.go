@@ -104,11 +104,17 @@ orgs:
       - name: plugin-a
 `
 	configPath := filepath.Join(dir, "config.yaml")
-	os.WriteFile(configPath, []byte(mainConfig), 0644)
+	if err := os.WriteFile(configPath, []byte(mainConfig), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	suppDir := filepath.Join(dir, "supplemental")
-	os.Mkdir(suppDir, 0755)
-	os.WriteFile(filepath.Join(suppDir, "extra.yaml"), []byte(supplemental), 0644)
+	if err := os.Mkdir(suppDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(suppDir, "extra.yaml"), []byte(supplemental), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := Load(configPath, suppDir)
 	if err != nil {
@@ -125,7 +131,9 @@ orgs:
 func TestLoad_SupplementalDirNonExistent(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
-	os.WriteFile(configPath, []byte("plugins: []\n"), 0644)
+	if err := os.WriteFile(configPath, []byte("plugins: []\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := Load(configPath, filepath.Join(dir, "nonexistent"))
 	if err != nil {
@@ -139,11 +147,17 @@ func TestLoad_SupplementalDirNonExistent(t *testing.T) {
 func TestLoad_SupplementalSkipsDotDot(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
-	os.WriteFile(configPath, []byte("plugins: []\n"), 0644)
+	if err := os.WriteFile(configPath, []byte("plugins: []\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	suppDir := filepath.Join(dir, "supp")
-	os.Mkdir(suppDir, 0755)
-	os.WriteFile(filepath.Join(suppDir, "..data.yaml"), []byte("plugins:\n  - name: should-not-load\n"), 0644)
+	if err := os.Mkdir(suppDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(suppDir, "..data.yaml"), []byte("plugins:\n  - name: should-not-load\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := Load(configPath, suppDir)
 	if err != nil {
